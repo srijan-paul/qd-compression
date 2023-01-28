@@ -1,0 +1,16 @@
+{
+  "name": "qd-compression",
+  "version": "0.0.1",
+  "repository": "https://github.com/srijan-paul/qd-compression",
+  "author": "cbrtl (Anubhab, Srijan)",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.32.0"
+  },
+  "scripts": {
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "prettier": "^2.8.3"
+  }
+}
