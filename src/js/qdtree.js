@@ -89,11 +89,6 @@ export class QTNode {
 
     if (this.isBlurred) {
       this.isBlurred = false;
-      this.tl.isBlurred =
-        this.tr.isBlurred =
-        this.bl.isBlurred =
-        this.br.isBlurred =
-          false;
       return;
     }
 

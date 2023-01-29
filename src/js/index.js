@@ -78,7 +78,7 @@ qTree.draw(ctx);
 const mousePos = { x: 0, y: 0 };
 
 let lastUpdateTime = -Infinity;
-const frameTime = 0;
+const frameTime = 30;
 
 function update() {
   const currentTime = Date.now();
