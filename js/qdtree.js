@@ -43,8 +43,64 @@ export default function createQTreeOfHeight(height, aabb) {
   }
 
   const root = new QTNode(aabb);
+  root.height = height;
   recursiveCreate(root, height);
   return root;
+}
+
+/**
+ * Get the RGB value of a pixel at a given coordinate.
+ * @param {number} x The X-coordinate of the pixel value to fetch
+ * @param {number} y The Y-coordiante of the pixel value to fetch
+ * @param {Uint8ClampedArray} imageData
+ * @param {number} width Width of the image data
+ * @returns {number[]} An array of three numbers representing the RGB value of the pixel at (x, y)
+ */
+function getRGBValuesFromCoord(x, y, imageData, width) {
+  const index = (x + y * width) * 4;
+  return new Uint8Array([
+    imageData[index],
+    imageData[index + 1],
+    imageData[index + 2],
+  ]);
+}
+
+/**
+ * @param {QTNode} qTree
+ * @param {ImageData} image
+ */
+function populate(qTree, image) {
+  const { width, height, data } = image;
+
+  for (let x = 0; x < width; ++x) {
+    for (let y = 0; y < height; ++y) {
+      const color = getRGBValuesFromCoord(x, y, data, width);
+      qTree.insert(x, y, color);
+    }
+  }
+}
+
+/**
+ *
+ * @param {ImageData} imageData Data of the image to be compressed
+ * @param {number} factor The compression factor (must be a positive integer).
+ */
+export function compressImageData(imageData, factor) {
+  const { width, height } = imageData;
+  const newWidth = Math.ceil(width / factor);
+  const newHeight = Math.ceil(height / factor);
+
+  const qTreeHeight = Math.floor(Math.log(newWidth * newHeight) / Math.log(4));
+
+  const qTree = createQTreeOfHeight(qTreeHeight, {
+    x: 0,
+    y: 0,
+    w: width,
+    h: height,
+  });
+
+  populate(qTree, imageData);
+  return qTree;
 }
 
 /**
@@ -105,10 +161,10 @@ export class QTNode {
   }
 
   /**
-   *
    * @param {CanvasRenderingContext2D} ctx
+   * @param {number} height
    */
-  draw(ctx) {
+  draw(ctx, height) {
     if (this.isBlurred) {
       const { x, y, w, h } = this.aabb;
       ctx.fillStyle = `rgb(${this.averageColor.join(", ")})`;
@@ -117,10 +173,26 @@ export class QTNode {
     }
 
     if (!this.tl) return;
-    this.tl.draw(ctx);
-    this.tr.draw(ctx);
-    this.bl.draw(ctx);
-    this.br.draw(ctx);
+
+    this.tl.draw(ctx, height - 1);
+    this.tr.draw(ctx, height - 1);
+    this.bl.draw(ctx, height - 1);
+    this.br.draw(ctx, height - 1);
+  }
+
+  drawAtHeight(ctx, height) {
+    if (height === 0) {
+      const { x, y, w, h } = this.aabb;
+      ctx.fillStyle = `rgb(${this.averageColor.join(", ")})`;
+      ctx.fillRect(x, y, w, h);
+      return;
+    }
+
+    if (!this.tl) return;
+    this.tl.drawAtHeight(ctx, height - 1);
+    this.tr.drawAtHeight(ctx, height - 1);
+    this.bl.drawAtHeight(ctx, height - 1);
+    this.br.drawAtHeight(ctx, height - 1);
   }
 
   /**
