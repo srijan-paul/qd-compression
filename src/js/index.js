@@ -51,7 +51,12 @@ function constructQTree(image) {
 
   const N = width;
   const treeHeight = calculateQTreeHeight(N);
-  const qTree = createQTreeOfHeight(treeHeight, { x: 0, y: 0, sideLen: N });
+  const qTree = createQTreeOfHeight(treeHeight, {
+    x: 0,
+    y: 0,
+    w: width,
+    h: height,
+  });
   return qTree;
 }
 

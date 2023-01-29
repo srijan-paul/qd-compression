@@ -4,37 +4,42 @@
  * @returns a Quadtree of height [height]
  */
 export default function createQTreeOfHeight(height, aabb) {
-  function recursiveCreate(node, h) {
-    if (h === 0) return;
+  function recursiveCreate(node, height) {
+    if (height === 0) return;
 
-    const { x, y, sideLen } = node.aabb;
-    const halfSideLen = sideLen / 2;
+    const { x, y, w, h } = node.aabb;
+    const halfW = w / 2;
+    const halfH = h / 2;
 
     node.tl = new QTNode({
       x,
       y,
-      sideLen: halfSideLen,
+      w: halfW,
+      h: halfH,
     });
     node.tr = new QTNode({
-      x: x + halfSideLen,
+      x: x + halfW,
       y,
-      sideLen: halfSideLen,
+      w: halfW,
+      h: halfH,
     });
     node.bl = new QTNode({
       x,
-      y: y + halfSideLen,
-      sideLen: halfSideLen,
+      y: y + halfH,
+      w: halfW,
+      h: halfH,
     });
     node.br = new QTNode({
-      x: x + halfSideLen,
-      y: y + halfSideLen,
-      sideLen: halfSideLen,
+      x: x + halfW,
+      y: y + halfH,
+      w: halfW,
+      h: halfH,
     });
 
-    recursiveCreate(node.tl, h - 1);
-    recursiveCreate(node.tr, h - 1);
-    recursiveCreate(node.bl, h - 1);
-    recursiveCreate(node.br, h - 1);
+    recursiveCreate(node.tl, height - 1);
+    recursiveCreate(node.tr, height - 1);
+    recursiveCreate(node.bl, height - 1);
+    recursiveCreate(node.br, height - 1);
   }
 
   const root = new QTNode(aabb);
@@ -46,7 +51,8 @@ export default function createQTreeOfHeight(height, aabb) {
  * @typedef {Object} AABB An axis aligned square
  * @property {number} x X coordinate of the Top-left corner of the rect.
  * @property {number} y X coordinate of the Top-left corner of the rect.
- * @property {number} sideLen length of each edge of the square.
+ * @property {number} width width of the rect.
+ * @property {number} height height of the rect.
  */
 
 export class QTNode {
@@ -80,8 +86,8 @@ export class QTNode {
     if (
       mx <= this.aabb.x ||
       my <= this.aabb.y ||
-      mx >= this.aabb.x + this.aabb.sideLen ||
-      my >= this.aabb.y + this.aabb.sideLen
+      mx >= this.aabb.x + this.aabb.w ||
+      my >= this.aabb.y + this.aabb.h
     )
       return;
 
@@ -104,15 +110,9 @@ export class QTNode {
    */
   draw(ctx) {
     if (this.isBlurred) {
-      const { x, y, sideLen: w } = this.aabb;
+      const { x, y, w, h } = this.aabb;
       ctx.fillStyle = `rgb(${this.averageColor.join(", ")})`;
-      const cx = x + w / 2;
-      const cy = y + w / 2;
-      const r = w / 2 - 0.1 * w;
-      // ctx.fillRect(x, y, w, w);
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
-      ctx.fill();
+      ctx.fillRect(x, y, w, h);
       return;
     }
 
@@ -135,17 +135,21 @@ export class QTNode {
     if (
       px <= this.aabb.x ||
       py <= this.aabb.y ||
-      px >= this.aabb.x + this.aabb.sideLen ||
-      py >= this.aabb.y + this.aabb.sideLen
+      px >= this.aabb.x + this.aabb.w ||
+      py >= this.aabb.y + this.aabb.h
     )
       return false;
 
     if (!this.tl) {
       // `this` is a leaf node
-      this.nPixels ??= 0;
+      if (!this.nPixels) {
+        this.nPixels = 0;
+        this.averageColor = new Uint8Array([r, g, b]);
+        return true;
+      }
 
+      const newPixelCount = this.nPixels + 1;
       const { nPixels } = this;
-      const newPixelCount = nPixels + 1;
       this.averageColor[0] = this.averageColor[0] * nPixels + r / newPixelCount;
       this.averageColor[1] = this.averageColor[1] * nPixels + g / newPixelCount;
       this.averageColor[2] = this.averageColor[2] * nPixels + b / newPixelCount;
