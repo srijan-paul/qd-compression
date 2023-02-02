@@ -1,7 +1,5 @@
 import { compressImageData } from "./qdtree.js";
 
-const img = document.getElementById("debanwita");
-
 function readImageDataUsingCanvas(canvas, ctx, img) {
   ctx.imageSmoothingEnabled = false;
   canvas.width = img.width;
@@ -13,11 +11,11 @@ function readImageDataUsingCanvas(canvas, ctx, img) {
   return imageData;
 }
 
-function initSliderCanvas() {
+function initSliderCanvas(img) {
   const sliderCanvas = document.querySelector("#canvas-1");
   const ctx = sliderCanvas.getContext("2d");
-  
-  const imageData = readImageDataUsingCanvas(sliderCanvas, ctx, img)
+
+  const imageData = readImageDataUsingCanvas(sliderCanvas, ctx, img);
 
   const qTree = compressImageData(imageData, 1);
   const qHeight = qTree.height;
@@ -43,10 +41,10 @@ function initSliderCanvas() {
 function initMouseCanvas(image) {
   const canvas = document.getElementById("canvas-2");
   const ctx = canvas.getContext("2d");
- 
-  const imageData = readImageDataUsingCanvas(canvas, ctx, image)
+
+  const imageData = readImageDataUsingCanvas(canvas, ctx, image);
   const qTree = compressImageData(imageData, 1);
-  qTree.draw(ctx)
+  qTree.draw(ctx);
 
   const mousePos = { x: 0, y: 0 };
   let lastUpdateTime = -Infinity;
@@ -55,9 +53,8 @@ function initMouseCanvas(image) {
   function update() {
     const currentTime = Date.now();
     const diff = currentTime - lastUpdateTime;
-    if (diff < frameTime) {
-      return;
-    }
+    if (diff < frameTime) return;
+
     lastUpdateTime = currentTime;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     qTree.reveal(mousePos.x, mousePos.y);
@@ -74,9 +71,21 @@ function initMouseCanvas(image) {
   });
 }
 
-img.onload = () => {
-  initSliderCanvas();
-};
+function generateImageFromSearchBar() {
+  const imageUrl = window.location.search.substring(1);
+  if (!imageUrl) return null;
+  const img = new Image();
+  img.crossOrigin = "";
+  img.src = imageUrl;
+  img.style.display = "none";
+  const imageWrapper = document.querySelector("#image-wrapper");
+  imageWrapper.innerHTML = "";
+  imageWrapper.appendChild(img);
+  return img;
+}
 
-const img2 = document.querySelector("#animegirl")
-img2.onload = () => initMouseCanvas(img2)
+const img = generateImageFromSearchBar();
+img.onload = () => {
+  initSliderCanvas(img);
+  initMouseCanvas(img);
+};
